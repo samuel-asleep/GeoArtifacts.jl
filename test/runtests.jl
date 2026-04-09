@@ -4,6 +4,17 @@ using Test
 
 @testset "GeoArtifacts.jl" begin
   @testset "GADM" begin
+    # error handling (no download needed)
+    @test_throws ArgumentError GADM.download("INVALID_CODE")
+    @test_throws ArgumentError GADM.download("USA"; version=v"1.0")
+
+    # codes table
+    codes = GADM.codes()
+    @test length(codes) > 0
+    @test codes[1].country isa String
+    @test codes[1].code isa String
+
+    # depth=1 (admin divisions)
     gtb = GADM.get("SVN", depth=1)
     @test length(gtb.geometry) == 12
 
@@ -12,10 +23,45 @@ using Test
 
     gtb = GADM.get("ISR", depth=1)
     @test length(gtb.geometry) == 7
+
+    # depth=0 (country border, reuses cached QAT download)
+    gtb = GADM.get("QAT")
+    @test length(gtb.geometry) == 1
   end
 
   @testset "NaturalEarth" begin
+    # error handling (no download needed)
+    @test_throws ArgumentError NaturalEarth.download("1:200", "Countries", "countries")
+    @test_throws ArgumentError NaturalEarth.countries("invalid_variant")
+    @test_throws ArgumentError NaturalEarth.borders("invalid_variant")
+    @test_throws ArgumentError NaturalEarth.states("invalid_variant")
+    @test_throws ArgumentError NaturalEarth.counties("invalid_variant")
+    @test_throws ArgumentError NaturalEarth.populatedplaces("invalid_variant")
+    @test_throws ArgumentError NaturalEarth.roads("invalid_variant")
+    @test_throws ArgumentError NaturalEarth.railroads("invalid_variant")
+    @test_throws ArgumentError NaturalEarth.lands("invalid_variant")
+    @test_throws ArgumentError NaturalEarth.minorislands("invalid_variant")
+    @test_throws ArgumentError NaturalEarth.oceans("invalid_variant")
+    @test_throws ArgumentError NaturalEarth.rivers("invalid_variant")
+    @test_throws ArgumentError NaturalEarth.lakes("invalid_variant")
+    @test_throws ArgumentError NaturalEarth.physicallabels("invalid_variant")
+    @test_throws ArgumentError NaturalEarth.iceshelves("invalid_variant")
+    @test_throws ArgumentError NaturalEarth.bathymetry("invalid_variant")
+    @test_throws ArgumentError NaturalEarth.graticules("invalid_variant")
+    @test_throws ArgumentError NaturalEarth.hypsometrictints("invalid_variant")
+    @test_throws ArgumentError NaturalEarth.naturalearth1("invalid_variant")
+    @test_throws ArgumentError NaturalEarth.naturalearth2("invalid_variant")
+    @test_throws ArgumentError NaturalEarth.grayearth("invalid_variant")
+    @test_throws ArgumentError NaturalEarth.hypsometrictints(size="huge")
+    @test_throws ArgumentError NaturalEarth.naturalearth1(size="huge")
+    @test_throws ArgumentError NaturalEarth.naturalearth2(size="huge")
+    @test_throws ArgumentError NaturalEarth.shadedrelief(size="huge")
+    @test_throws ArgumentError NaturalEarth.grayearth(size="huge")
+
     gtb = NaturalEarth.countries()
+    @test gtb.geometry isa GeometrySet
+    @test paramdim(gtb.geometry) == 2
+    gtb = NaturalEarth.countries(scale="1:50")
     @test gtb.geometry isa GeometrySet
     @test paramdim(gtb.geometry) == 2
     gtb = NaturalEarth.countries(scale="1:110")
@@ -25,11 +71,17 @@ using Test
     gtb = NaturalEarth.borders()
     @test gtb.geometry isa GeometrySet
     @test paramdim(gtb.geometry) == 1
+    gtb = NaturalEarth.borders(scale="1:50")
+    @test gtb.geometry isa GeometrySet
+    @test paramdim(gtb.geometry) == 1
     gtb = NaturalEarth.borders(scale="1:110")
     @test gtb.geometry isa GeometrySet
     @test paramdim(gtb.geometry) == 1
 
     gtb = NaturalEarth.states()
+    @test gtb.geometry isa GeometrySet
+    @test paramdim(gtb.geometry) == 2
+    gtb = NaturalEarth.states(scale="1:50")
     @test gtb.geometry isa GeometrySet
     @test paramdim(gtb.geometry) == 2
     gtb = NaturalEarth.states(scale="1:110")
@@ -46,6 +98,9 @@ using Test
     gtb = NaturalEarth.populatedplaces(scale="1:50")
     @test gtb.geometry isa GeometrySet
     @test paramdim(gtb.geometry) == 0
+    gtb = NaturalEarth.populatedplaces(scale="1:110")
+    @test gtb.geometry isa GeometrySet
+    @test paramdim(gtb.geometry) == 0
 
     gtb = NaturalEarth.roads()
     @test gtb.geometry isa GeometrySet
@@ -58,8 +113,14 @@ using Test
     gtb = NaturalEarth.airports()
     @test gtb.geometry isa GeometrySet
     @test paramdim(gtb.geometry) == 0
+    gtb = NaturalEarth.airports(scale="1:50")
+    @test gtb.geometry isa GeometrySet
+    @test paramdim(gtb.geometry) == 0
 
     gtb = NaturalEarth.ports()
+    @test gtb.geometry isa GeometrySet
+    @test paramdim(gtb.geometry) == 0
+    gtb = NaturalEarth.ports(scale="1:50")
     @test gtb.geometry isa GeometrySet
     @test paramdim(gtb.geometry) == 0
 
@@ -81,11 +142,17 @@ using Test
     gtb = NaturalEarth.coastlines()
     @test gtb.geometry isa GeometrySet
     @test paramdim(gtb.geometry) == 1
+    gtb = NaturalEarth.coastlines(scale="1:50")
+    @test gtb.geometry isa GeometrySet
+    @test paramdim(gtb.geometry) == 1
     gtb = NaturalEarth.coastlines(scale="1:110")
     @test gtb.geometry isa GeometrySet
     @test paramdim(gtb.geometry) == 1
 
     gtb = NaturalEarth.lands()
+    @test gtb.geometry isa GeometrySet
+    @test paramdim(gtb.geometry) == 2
+    gtb = NaturalEarth.lands(scale="1:50")
     @test gtb.geometry isa GeometrySet
     @test paramdim(gtb.geometry) == 2
     gtb = NaturalEarth.lands(scale="1:110")
@@ -103,6 +170,9 @@ using Test
     gtb = NaturalEarth.oceans()
     @test gtb.geometry isa GeometrySet
     @test paramdim(gtb.geometry) == 2
+    gtb = NaturalEarth.oceans(scale="1:50")
+    @test gtb.geometry isa GeometrySet
+    @test paramdim(gtb.geometry) == 2
     gtb = NaturalEarth.oceans(scale="1:110")
     @test gtb.geometry isa GeometrySet
     @test paramdim(gtb.geometry) == 2
@@ -110,11 +180,17 @@ using Test
     gtb = NaturalEarth.rivers()
     @test gtb.geometry isa GeometrySet
     @test paramdim(gtb.geometry) == 1
+    gtb = NaturalEarth.rivers(scale="1:50")
+    @test gtb.geometry isa GeometrySet
+    @test paramdim(gtb.geometry) == 1
     gtb = NaturalEarth.rivers(scale="1:110")
     @test gtb.geometry isa GeometrySet
     @test paramdim(gtb.geometry) == 1
 
     gtb = NaturalEarth.lakes()
+    @test gtb.geometry isa GeometrySet
+    @test paramdim(gtb.geometry) == 2
+    gtb = NaturalEarth.lakes(scale="1:50")
     @test gtb.geometry isa GeometrySet
     @test paramdim(gtb.geometry) == 2
     gtb = NaturalEarth.lakes(scale="1:110")
